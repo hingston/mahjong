@@ -1,135 +1,136 @@
 package com.github.blovemaple.mj.local.bazbot;
 
-import static java.util.Collections.*;
-import static java.util.stream.Collectors.*;
+import com.github.blovemaple.mj.object.StandardTileUnitType;
+import com.github.blovemaple.mj.object.Tile;
+import com.github.blovemaple.mj.object.TileType;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import com.github.blovemaple.mj.object.StandardTileUnitType;
-import com.github.blovemaple.mj.object.Tile;
-import com.github.blovemaple.mj.object.TileType;
+import static java.util.Collections.disjoint;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 /**
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
 class BazBotTileUnit {
-	private boolean completed;
-	private StandardTileUnitType unitType;
-	private Set<Tile> tiles;
+    private boolean completed;
+    private StandardTileUnitType unitType;
+    private Set<Tile> tiles;
 
-	private BazBotTileUnitType type;
-	private BazBotTileNeighborhood hood;
+    private BazBotTileUnitType type;
+    private BazBotTileNeighborhood hood;
 
-	enum BazBotTileUnitType {
-		/**
-		 * 完整将牌。
-		 */
-		COMPLETE_JIANG(true),
-		/**
-		 * 完整顺刻。
-		 */
-		COMPLETE_SHUNKE(false),
-		/**
-		 * 缺一张的不完整顺刻。
-		 */
-		UNCOMPLETE_SHUNKE_FOR_ONE(false),
-		/**
-		 * 缺两张的不完整顺刻。
-		 */
-		UNCOMPLETE_SHUNKE_FOR_TWO(false),
-		/**
-		 * 不完整将牌。
-		 */
-		UNCOMPLETE_JIANG(true);
+    private BazBotTileUnit(boolean isCompleted, StandardTileUnitType unitType, Set<Tile> tiles,
+                           BazBotTileNeighborhood hood) {
+        this.completed = isCompleted;
+        this.unitType = unitType;
+        this.tiles = tiles;
+        this.type = BazBotTileUnitType.of(isCompleted, unitType, tiles);
+        this.hood = hood;
+    }
 
-		private final boolean isJiang;
+    public static BazBotTileUnit completed(StandardTileUnitType unitType, Set<Tile> tiles,
+                                           BazBotTileNeighborhood hood) {
+        return new BazBotTileUnit(true, unitType, tiles, hood);
+    }
 
-		private BazBotTileUnitType(boolean isJiang) {
-			this.isJiang = isJiang;
-		}
+    public static BazBotTileUnit uncompleted(StandardTileUnitType unitType, Set<Tile> tiles,
+                                             BazBotTileNeighborhood hood) {
+        return new BazBotTileUnit(false, unitType, tiles, hood);
+    }
 
-		public boolean isJiang() {
-			return isJiang;
-		}
+    public Set<Tile> tiles() {
+        return tiles;
+    }
 
-		public static BazBotTileUnitType of(boolean completed, StandardTileUnitType unitType, Set<Tile> tiles) {
-			switch (unitType) {
-			case GANGZI:
-			case HUA_UNIT:
-				throw new RuntimeException("Unsupported StandardTileUnitType: " + unitType);
-			case JIANG:
-				return completed ? COMPLETE_JIANG : UNCOMPLETE_JIANG;
-			case KEZI:
-			case SHUNZI:
-				return completed ? COMPLETE_SHUNKE
-						: unitType.size() - tiles.size() == 1 ? UNCOMPLETE_SHUNKE_FOR_ONE : UNCOMPLETE_SHUNKE_FOR_TWO;
-			default:
-				throw new RuntimeException("Unrecognized StandardTileUnitType: " + unitType);
-			}
-		}
+    public BazBotTileUnitType type() {
+        return type;
+    }
 
-	}
+    public BazBotTileNeighborhood hood() {
+        return hood;
+    }
 
-	public static BazBotTileUnit completed(StandardTileUnitType unitType, Set<Tile> tiles,
-			BazBotTileNeighborhood hood) {
-		return new BazBotTileUnit(true, unitType, tiles, hood);
-	}
+    public boolean conflictWith(BazBotTileUnit other) {
+        if (tiles.isEmpty() || other.tiles.isEmpty())
+            return false;
+        if (this == other)
+            return !tiles.isEmpty();
+        return !disjoint(tiles, other.tiles);
+    }
 
-	public static BazBotTileUnit uncompleted(StandardTileUnitType unitType, Set<Tile> tiles,
-			BazBotTileNeighborhood hood) {
-		return new BazBotTileUnit(false, unitType, tiles, hood);
-	}
+    public boolean conflictWith(Collection<Tile> tiles) {
+        if (this.tiles.isEmpty() || tiles.isEmpty())
+            return false;
+        return !disjoint(this.tiles, tiles);
+    }
 
-	private BazBotTileUnit(boolean isCompleted, StandardTileUnitType unitType, Set<Tile> tiles,
-			BazBotTileNeighborhood hood) {
-		this.completed = isCompleted;
-		this.unitType = unitType;
-		this.tiles = tiles;
-		this.type = BazBotTileUnitType.of(isCompleted, unitType, tiles);
-		this.hood = hood;
-	}
+    public List<List<TileType>> forTileTypes(Set<Tile> conflictTiles) {
+        if (completed)
+            return List.of(List.of());
+        else {
+            Set<TileType> conflictTileTypes = conflictTiles.stream().map(Tile::type).collect(toSet());
+            return unitType.getLackedTypesForTiles(this.tiles).stream()
+                    .filter(tileTypes -> disjoint(tileTypes, conflictTileTypes)).collect(toList());
+        }
+    }
 
-	public Set<Tile> tiles() {
-		return tiles;
-	}
+    @Override
+    public String toString() {
+        return "{" + (completed ? "" : "UC_") + unitType + ":" + tiles + "}";
+    }
 
-	public BazBotTileUnitType type() {
-		return type;
-	}
+    enum BazBotTileUnitType {
+        /**
+         * 完整将牌。
+         */
+        COMPLETE_JIANG(true),
+        /**
+         * 完整顺刻。
+         */
+        COMPLETE_SHUNKE(false),
+        /**
+         * 缺一张的不完整顺刻。
+         */
+        UNCOMPLETE_SHUNKE_FOR_ONE(false),
+        /**
+         * 缺两张的不完整顺刻。
+         */
+        UNCOMPLETE_SHUNKE_FOR_TWO(false),
+        /**
+         * 不完整将牌。
+         */
+        UNCOMPLETE_JIANG(true);
 
-	public BazBotTileNeighborhood hood() {
-		return hood;
-	}
+        private final boolean isJiang;
 
-	public boolean conflictWith(BazBotTileUnit other) {
-		if (tiles.isEmpty() || other.tiles.isEmpty())
-			return false;
-		if (this == other)
-			return !tiles.isEmpty();
-		return !disjoint(tiles, other.tiles);
-	}
+        private BazBotTileUnitType(boolean isJiang) {
+            this.isJiang = isJiang;
+        }
 
-	public boolean conflictWith(Collection<Tile> tiles) {
-		if (this.tiles.isEmpty() || tiles.isEmpty())
-			return false;
-		return !disjoint(this.tiles, tiles);
-	}
+        public static BazBotTileUnitType of(boolean completed, StandardTileUnitType unitType, Set<Tile> tiles) {
+            switch (unitType) {
+                case GANGZI:
+                case HUA_UNIT:
+                    throw new RuntimeException("Unsupported StandardTileUnitType: " + unitType);
+                case JIANG:
+                    return completed ? COMPLETE_JIANG : UNCOMPLETE_JIANG;
+                case KEZI:
+                case SHUNZI:
+                    return completed ? COMPLETE_SHUNKE
+                            : unitType.size() - tiles.size() == 1 ? UNCOMPLETE_SHUNKE_FOR_ONE : UNCOMPLETE_SHUNKE_FOR_TWO;
+                default:
+                    throw new RuntimeException("Unrecognized StandardTileUnitType: " + unitType);
+            }
+        }
 
-	public List<List<TileType>> forTileTypes(Set<Tile> conflictTiles) {
-		if (completed)
-			return List.of(List.of());
-		else {
-			Set<TileType> conflictTileTypes = conflictTiles.stream().map(Tile::type).collect(toSet());
-			return unitType.getLackedTypesForTiles(this.tiles).stream()
-					.filter(tileTypes -> disjoint(tileTypes, conflictTileTypes)).collect(toList());
-		}
-	}
+        public boolean isJiang() {
+            return isJiang;
+        }
 
-	@Override
-	public String toString() {
-		return "{" + (completed ? "" : "UC_") + unitType + ":" + tiles + "}";
-	}
+    }
 
 }

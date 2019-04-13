@@ -1,7 +1,13 @@
 package com.github.blovemaple.mj.action.standard;
 
-import static com.github.blovemaple.mj.action.standard.PlayerActionTypes.*;
-import static com.github.blovemaple.mj.utils.MyUtils.*;
+import com.github.blovemaple.mj.action.AbstractPlayerActionType;
+import com.github.blovemaple.mj.action.Action;
+import com.github.blovemaple.mj.action.ActionType;
+import com.github.blovemaple.mj.action.PlayerAction;
+import com.github.blovemaple.mj.game.GameContext;
+import com.github.blovemaple.mj.game.GameContextPlayerView;
+import com.github.blovemaple.mj.object.*;
+import com.github.blovemaple.mj.object.PlayerLocation.Relation;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -11,18 +17,8 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.github.blovemaple.mj.action.AbstractPlayerActionType;
-import com.github.blovemaple.mj.action.Action;
-import com.github.blovemaple.mj.action.ActionType;
-import com.github.blovemaple.mj.action.PlayerAction;
-import com.github.blovemaple.mj.game.GameContext;
-import com.github.blovemaple.mj.game.GameContextPlayerView;
-import com.github.blovemaple.mj.object.PlayerInfo;
-import com.github.blovemaple.mj.object.PlayerLocation;
-import com.github.blovemaple.mj.object.PlayerLocation.Relation;
-import com.github.blovemaple.mj.object.Tile;
-import com.github.blovemaple.mj.object.TileGroup;
-import com.github.blovemaple.mj.object.TileGroupType;
+import static com.github.blovemaple.mj.action.standard.PlayerActionTypes.DISCARD;
+import static com.github.blovemaple.mj.utils.MyUtils.mergedSet;
 
 /**
  * 吃、碰、直杠动作类型的统一逻辑。<br>
@@ -30,102 +26,99 @@ import com.github.blovemaple.mj.object.TileGroupType;
  * <li>都可以放弃；
  * <li>前提条件都是别的玩家出牌后；
  * <li>都是从特定关系的玩家的出牌中得牌，并组成一种group。
- * 
+ *
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
 public class CpgActionType extends AbstractPlayerActionType {
-	@SuppressWarnings("unused")
-	private static final Logger logger = Logger
-			.getLogger(CpgActionType.class.getSimpleName());
+    @SuppressWarnings("unused")
+    private static final Logger logger = Logger
+            .getLogger(CpgActionType.class.getSimpleName());
 
-	private TileGroupType groupType;
-	private Collection<PlayerLocation.Relation> lastActionRelations;
+    private TileGroupType groupType;
+    private Collection<PlayerLocation.Relation> lastActionRelations;
 
-	/**
-	 * 新建实例。
-	 * 
-	 * @param groupType
-	 *            组成的牌组类型
-	 * @param lastActionRelations
-	 *            限制上一个动作的玩家（出牌者）与当前玩家的位置关系
-	 */
-	protected CpgActionType(TileGroupType groupType,
-			Collection<Relation> lastActionRelations) {
-		Objects.requireNonNull(groupType);
-		this.groupType = groupType;
-		this.lastActionRelations = lastActionRelations != null
-				? lastActionRelations
-				: Stream.of(Relation.values()).filter(Relation::isOther)
-						.collect(Collectors.toList());
-	}
+    /**
+     * 新建实例。
+     *
+     * @param groupType           组成的牌组类型
+     * @param lastActionRelations 限制上一个动作的玩家（出牌者）与当前玩家的位置关系
+     */
+    protected CpgActionType(TileGroupType groupType,
+                            Collection<Relation> lastActionRelations) {
+        Objects.requireNonNull(groupType);
+        this.groupType = groupType;
+        this.lastActionRelations = lastActionRelations != null
+                ? lastActionRelations
+                : Stream.of(Relation.values()).filter(Relation::isOther)
+                .collect(Collectors.toList());
+    }
 
-	/**
-	 * 新建实例。上一个动作的玩家（出牌者）与当前玩家的位置关系是所有其他人。
-	 * 
-	 * @param groupType
-	 *            组成的牌组类型
-	 */
-	protected CpgActionType(TileGroupType groupType) {
-		this(groupType, null);
-	}
+    /**
+     * 新建实例。上一个动作的玩家（出牌者）与当前玩家的位置关系是所有其他人。
+     *
+     * @param groupType 组成的牌组类型
+     */
+    protected CpgActionType(TileGroupType groupType) {
+        this(groupType, null);
+    }
 
-	@Override
-	public boolean canPass(GameContext context, PlayerLocation location) {
-		return true;
-	}
+    @Override
+    public boolean canPass(GameContext context, PlayerLocation location) {
+        return true;
+    }
 
-	@Override
-	protected boolean isAllowedInTing() {
-		return false;
-	}
+    @Override
+    protected boolean isAllowedInTing() {
+        return false;
+    }
 
-	@Override
-	protected BiPredicate<Action, PlayerLocation> getLastActionPrecondition() {
-		// 必须是指定关系的人出牌后
-		return (a, location) -> DISCARD.matchBy(a.getType())
-				&& lastActionRelations.contains(location.getRelationOf(((PlayerAction) a).getLocation()));
-	}
+    @Override
+    protected BiPredicate<Action, PlayerLocation> getLastActionPrecondition() {
+        // 必须是指定关系的人出牌后
+        return (a, location) -> DISCARD.matchBy(a.getType())
+                && lastActionRelations.contains(location.getRelationOf(((PlayerAction) a).getLocation()));
+    }
 
-	@Override
-	protected int getActionTilesSize() {
-		return groupType.size() - 1;
-	}
+    @Override
+    protected int getActionTilesSize() {
+        return groupType.size() - 1;
+    }
 
-	@Override
-	protected boolean isLegalActionWithPreconition(GameContextPlayerView context,
-			Set<Tile> tiles) {
-		Set<Tile> testTiles = mergedSet(tiles, (Tile) ((PlayerAction) context.getLastAction()).getTile());
-		boolean legal = groupType.isLegalTiles(testTiles);
-		return legal;
-	}
+    @Override
+    protected boolean isLegalActionWithPreconition(GameContextPlayerView context,
+                                                   Set<Tile> tiles) {
+        Set<Tile> testTiles = mergedSet(tiles, (Tile) ((PlayerAction) context.getLastAction()).getTile());
+        boolean legal = groupType.isLegalTiles(testTiles);
+        return legal;
+    }
 
-	@Override
-	protected void doLegalAction(GameContext context, PlayerLocation location,
-			Set<Tile> tiles) {
-		PlayerInfo playerInfo = context.getPlayerInfoByLocation(location);
+    @Override
+    protected void doLegalAction(GameContext context, PlayerLocation location,
+                                 Set<Tile> tiles) {
+        PlayerInfo playerInfo = context.getPlayerInfoByLocation(location);
 
-		playerInfo.getAliveTiles().removeAll(tiles);
+        playerInfo.getAliveTiles().removeAll(tiles);
 
-		Tile gotTile = ((PlayerAction) context.getLastAction()).getTile();
-		TileGroup group = new TileGroup(groupType, gotTile,
-				location.getRelationOf(context.getLastActionLocation()),
-				mergedSet(tiles, gotTile));
-		playerInfo.getTileGroups().add(group);
-	}
+        Tile gotTile = ((PlayerAction) context.getLastAction()).getTile();
+        TileGroup group = new TileGroup(groupType, gotTile,
+                location.getRelationOf(context.getLastActionLocation()),
+                mergedSet(tiles, gotTile));
+        playerInfo.getTileGroups().add(group);
+    }
 
-	/**
-	 * 如果此类与testType的真正类是从属关系，并且testType的groupType与此对象相同，则视为match。
-	 * 
-	 * @see com.github.blovemaple.mj.action.AbstractPlayerActionType#matchBy(com.github.blovemaple.mj.action.ActionType)
-	 */
-	@Override
-	public boolean matchBy(ActionType testType) {
-		if (!CpgActionType.class.isAssignableFrom(testType.getRealTypeClass()))
-			return false;
-		if (!groupType.equals(
-				((CpgActionType) testType.getRealTypeObject()).groupType))
-			return false;
-		return true;
-	}
+    /**
+     * 如果此类与testType的真正类是从属关系，并且testType的groupType与此对象相同，则视为match。
+     *
+     * @see com.github.blovemaple.mj.action.AbstractPlayerActionType#matchBy(com.github.blovemaple.mj.action.ActionType)
+     */
+    @Override
+    public boolean matchBy(ActionType testType) {
+        if (!CpgActionType.class.isAssignableFrom(testType.getRealTypeClass()))
+            return false;
+        if (!groupType.equals(
+                ((CpgActionType) testType.getRealTypeObject()).groupType))
+            return false;
+        return true;
+    }
 
 }

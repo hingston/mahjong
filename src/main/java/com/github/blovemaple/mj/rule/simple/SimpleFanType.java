@@ -1,36 +1,36 @@
 package com.github.blovemaple.mj.rule.simple;
 
-import java.util.Set;
-
 import com.github.blovemaple.mj.rule.win.FanType;
 import com.github.blovemaple.mj.rule.win.WinInfo;
 
+import java.util.Set;
+
 /**
  * 简单番种，和牌即算。
- * 
+ *
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
 public class SimpleFanType implements FanType {
-	public static final String NAME = "SIMPLE";
+    public static final String NAME = "SIMPLE";
 
-	@Override
-	public String name() {
-		return NAME;
-	}
+    @Override
+    public String name() {
+        return NAME;
+    }
 
-	@Override
-	public int matchCount(WinInfo winInfo) {
-		return 1;
-	}
+    @Override
+    public int matchCount(WinInfo winInfo) {
+        return 1;
+    }
 
-	@Override
-	public int score() {
-		return 1;
-	}
+    @Override
+    public int score() {
+        return 1;
+    }
 
-	@Override
-	public Set<FanType> covered() {
-		return null;
-	}
+    @Override
+    public Set<FanType> covered() {
+        return null;
+    }
 
 }

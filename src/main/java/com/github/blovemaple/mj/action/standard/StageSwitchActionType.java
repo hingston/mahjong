@@ -9,35 +9,35 @@ import com.github.blovemaple.mj.rule.GameStage;
 
 /**
  * 状态切换的动作类型。
- * 
+ *
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
 public class StageSwitchActionType implements ActionType {
-	public static final StageSwitchActionType INSTANCE = new StageSwitchActionType();
+    public static final StageSwitchActionType INSTANCE = new StageSwitchActionType();
 
-	@Override
-	public String name() {
-		return "STAGE";
-	}
+    @Override
+    public String name() {
+        return "STAGE";
+    }
 
-	@Override
-	public boolean isLegalAction(GameContext context, Action action) {
-		if (!(action instanceof StageSwitchAction))
-			return false;
-		return context.getGameStrategy().getStageByName(((StageSwitchAction) action).getNextStageName()) != null;
-	}
+    @Override
+    public boolean isLegalAction(GameContext context, Action action) {
+        if (!(action instanceof StageSwitchAction))
+            return false;
+        return context.getGameStrategy().getStageByName(((StageSwitchAction) action).getNextStageName()) != null;
+    }
 
-	@Override
-	public void doAction(GameContext context, Action action) throws IllegalActionException {
-		GameStage nextStage = context.getGameStrategy().getStageByName(((StageSwitchAction) action).getNextStageName());
-		if (nextStage == null)
-			throw new IllegalActionException(context, action);
-		context.setStage(nextStage);
-	}
+    @Override
+    public void doAction(GameContext context, Action action) throws IllegalActionException {
+        GameStage nextStage = context.getGameStrategy().getStageByName(((StageSwitchAction) action).getNextStageName());
+        if (nextStage == null)
+            throw new IllegalActionException(context, action);
+        context.setStage(nextStage);
+    }
 
-	@Override
-	public String toString() {
-		return name();
-	}
+    @Override
+    public String toString() {
+        return name();
+    }
 
 }

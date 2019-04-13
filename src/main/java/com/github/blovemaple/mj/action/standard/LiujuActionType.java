@@ -9,24 +9,24 @@ import com.github.blovemaple.mj.rule.simple.PlayingStage;
 
 /**
  * 动作类型“流局”。
- * 
+ *
  * @author blovemaple <blovemaple2010(at)gmail.com>
  */
 public class LiujuActionType implements AutoActionType {
 
-	protected LiujuActionType() {
-	}
+    protected LiujuActionType() {
+    }
 
-	@Override
-	public boolean isLegalAction(GameContext context, Action action) {
-		return context.getStage().getName().equals(PlayingStage.NAME);
-	}
+    @Override
+    public boolean isLegalAction(GameContext context, Action action) {
+        return context.getStage().getName().equals(PlayingStage.NAME);
+    }
 
-	@Override
-	public void doAction(GameContext context, Action action) throws IllegalActionException {
-		GameResult result = new GameResult(context.getTable().getPlayerInfos(),
-				context.getZhuangLocation());
-		context.setGameResult(result);
-	}
+    @Override
+    public void doAction(GameContext context, Action action) throws IllegalActionException {
+        GameResult result = new GameResult(context.getTable().getPlayerInfos(),
+                context.getZhuangLocation());
+        context.setGameResult(result);
+    }
 
 }
