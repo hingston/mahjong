@@ -11,7 +11,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.github.blovemaple.mj.utils.LanguageManager.ExtraMessage.WINDOW_TOO_NARROW;
 import static com.github.blovemaple.mj.utils.MyUtils.strWidth;
 
 /**
@@ -116,7 +115,7 @@ class CliView {
         int strWidth = strWidth(status);
         int terminalWidth = console.getTerminal().getWidth();
         //if (strWidth > terminalWidth)
-            //status = WINDOW_TOO_NARROW.str();// TODO 窗口太窄
+        //status = WINDOW_TOO_NARROW.str();// TODO 窗口太窄
 
         int narrowed = strWidth(this.status) - strWidth(status);
         out.print('\r');

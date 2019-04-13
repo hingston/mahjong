@@ -28,6 +28,7 @@ class BazBotAliveTiles {
     private final Set<Tile> aliveTiles;
     private List<BazBotTileNeighborhood> neighborhoods; // lazy
     private List<List<TileType>> tileTypesToWin; // lazy
+
     private BazBotAliveTiles(Set<Tile> aliveTiles) {
         this.aliveTiles = aliveTiles;
     }

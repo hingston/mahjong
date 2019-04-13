@@ -28,6 +28,7 @@ public class LanguageManager {
     private static final String FAN_TYPE_PREFIX = "FAN_TYPE_";
     private static final Map<Object, Message> messageCache = Collections
             .synchronizedMap(new HashMap<>());
+
     private LanguageManager() {
     }
 

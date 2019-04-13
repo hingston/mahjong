@@ -97,7 +97,7 @@ public class CliRunner {
         localGame = new LocalGame(new CliPlayer(myName, cliView), rethrowSupplier(() -> {
             cliView.updateStatus(NEW_GAME_QUESTION.str());
             //cliView.addCharHandler(NEW_GAME_CHAR_HANDLER, true); //TODO uncomment and delete newGame = true
-            newGame =true;
+            newGame = true;
             return newGame;
         }));
     }

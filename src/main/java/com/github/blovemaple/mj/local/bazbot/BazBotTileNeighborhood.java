@@ -42,6 +42,7 @@ class BazBotTileNeighborhood {
     private List<BazBotTileUnit> uncompletedShunKesForOne = new ArrayList<>();
     private List<BazBotTileUnit> uncompletedShunKesForTwo = new ArrayList<>();
     private transient List<BazBotTileUnit> allUnits = new ArrayList<>();
+
     /**
      * @param tiles 注意：传入后不会做校验，调用者必须保证tiles是排好序的，并且是一个neighborhood中的牌。
      */

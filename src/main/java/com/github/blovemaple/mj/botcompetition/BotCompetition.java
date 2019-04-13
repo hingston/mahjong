@@ -1,6 +1,5 @@
 package com.github.blovemaple.mj.botcompetition;
 
-import com.github.blovemaple.mj.cli.CliRunner;
 import com.github.blovemaple.mj.game.GameResult;
 import com.github.blovemaple.mj.game.MahjongGame;
 import com.github.blovemaple.mj.local.AbstractBot;
@@ -13,7 +12,6 @@ import com.github.blovemaple.mj.rule.TimeLimitStrategy;
 import com.github.blovemaple.mj.rule.simple.SimpleGameStrategy;
 
 import java.util.List;
-import java.util.logging.LogManager;
 
 import static com.github.blovemaple.mj.object.PlayerLocation.*;
 
